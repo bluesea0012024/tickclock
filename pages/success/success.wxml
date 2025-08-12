@@ -1,0 +1,31 @@
+<view class="container">
+  <view class="success-header">
+    <text class="success-title">答对成功！</text>
+  </view>
+
+  <view class="stars-container">
+    <!-- 星星动画区域 -->
+    <view class="star star1"></view>
+    <view class="star star2"></view>
+    <view class="star star3"></view>
+    <view class="star star4"></view>
+    <view class="star star5"></view>
+  </view>
+
+  <view class="score-container">
+    <view class="score-item">
+      <text class="score-label">准确率</text>
+      <text class="score-value">{{scorePercent}}%</text>
+    </view>
+    <view class="score-item">
+      <text class="score-label">用时</text>
+      <text class="score-value">{{elapsedTime}}秒</text>
+    </view>
+  </view>
+
+  <view class="button-group">
+    <button class="btn" bindtap="playAgain">再来一次</button>
+    <button class="btn" bindtap="backToHome">回到首页</button>
+    <button class="btn" bindtap="viewCertificate">查看奖状</button>
+  </view>
+</view>

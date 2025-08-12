@@ -1,0 +1,128 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx;
+  height: 100vh;
+  background: linear-gradient(to bottom, #3A7FE0, #87CEFA);
+}
+
+.success-header {
+  margin-top: 60rpx;
+  margin-bottom: 40rpx;
+}
+
+.success-title {
+  font-size: 60rpx;
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 2rpx 2rpx 5rpx rgba(0, 0, 0, 0.3);
+}
+
+.stars-container {
+  width: 100%;
+  height: 400rpx;
+  position: relative;
+  margin-bottom: 40rpx;
+}
+
+.star {
+  position: absolute;
+  width: 80rpx;
+  height: 80rpx;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FFD700"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0;
+  animation: starAnimation 2s ease-out forwards;
+}
+
+.star1 {
+  top: 20%;
+  left: 20%;
+  animation-delay: 0.2s;
+}
+
+.star2 {
+  top: 10%;
+  left: 50%;
+  animation-delay: 0.4s;
+}
+
+.star3 {
+  top: 20%;
+  right: 20%;
+  animation-delay: 0.6s;
+}
+
+.star4 {
+  top: 60%;
+  left: 30%;
+  animation-delay: 0.8s;
+}
+
+.star5 {
+  top: 60%;
+  right: 30%;
+  animation-delay: 1s;
+}
+
+@keyframes starAnimation {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.score-container {
+  width: 80%;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 40rpx;
+  display: flex;
+  justify-content: space-around;
+}
+
+.score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.score-label {
+  font-size: 32rpx;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.score-value {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #E74C3C;
+}
+
+.button-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.btn {
+  width: 80%;
+  margin: 15rpx 0;
+  background-color: #FFD700;
+  color: #333;
+  font-size: 36rpx;
+  font-weight: bold;
+  border-radius: 50rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.2);
+}

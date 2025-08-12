@@ -1,0 +1,33 @@
+<view class="container">
+  <view class="header">
+    <text class="progress">答对：{{correctCount}}/5</text>
+  </view>
+
+  <!-- 使用指导 -->
+  <view class="instruction">
+    <text class="instruction-text">拖动分针调整时间</text>
+  </view>
+
+  <view class="clock-container">
+    <canvas canvas-id="clockCanvas" class="clock-canvas" style="width:{{canvasWidth}}px; height:{{canvasHeight}}px;" catchtouchstart="touchStart" catchtouchmove="touchMove" catchtouchend="touchEnd" disable-scroll="true"></canvas>
+  </view>
+
+  <view class="target-time">
+    <text>请将时钟调整到：{{targetTime}}</text>
+  </view>
+
+  <view class="button-group">
+    <button class="btn" bindtap="checkAnswer">确认</button>
+    <button class="btn" bindtap="resetGame">重新开始</button>
+    <button class="btn" wx:if="{{hasCertificate}}" bindtap="viewCertificate">查看奖状</button>
+  </view>
+
+  <!-- 昵称输入弹窗 -->
+  <view class="modal" wx:if="{{showNicknameModal}}">
+    <view class="modal-content">
+      <view class="modal-title">请输入您的昵称</view>
+      <input class="nickname-input" value="{{nickname}}" bindinput="onNicknameInput" placeholder="请输入昵称" />
+      <button class="btn confirm-btn" bindtap="submitNickname">确认</button>
+    </view>
+  </view>
+</view>
