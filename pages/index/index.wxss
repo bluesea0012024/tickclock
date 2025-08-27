@@ -38,17 +38,18 @@
 }
 
 .instruction-text {
-  font-size: 30rpx;
-  color: #2C3E50;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+  font-size: 32rpx;
+  color: #FF6B6B; /* Coral color from the button gradient to match the theme */
+  background: rgba(255, 255, 255, 0.85); /* Light background for contrast */
   padding: 15rpx 30rpx;
-  border-radius: 25rpx;
-  border: 2rpx solid rgba(116, 185, 255, 0.3);
-  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10rpx);
-  font-weight: 500;
+  border-radius: 20rpx; /* Rounded corners */
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  backdrop-filter: blur(8rpx); /* Glass morphism effect */
+  border: 1rpx solid rgba(255, 107, 107, 0.2); /* Light coral border */
+  font-weight: 600; /* Slightly bolder for better visibility */
   /* 将指导文本上移 20px */
   transform: translateY(-20px);
+  text-align: center; /* Ensure text is centered */
 }
 
 /* 时钟容器 */
@@ -77,22 +78,23 @@
   align-items: center;
   justify-content: center;
   margin: 40rpx 0;
-  font-size: 40rpx;
-  font-weight: bold;
-  color: #2C3E50;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
-  padding: 25rpx 50rpx;
-  border-radius: 25rpx;
-  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(10rpx);
-  border: 2rpx solid rgba(116, 185, 255, 0.3);
+  font-size: 36rpx; /* Slightly reduced size for better balance */
+  font-weight: 600; /* Increased weight for better visibility */
+  color: #4ECDC4; /* Turquoise color to match the restart button and theme */
+  background: rgba(255, 255, 255, 0.85); /* Lighter background for better contrast */
+  padding: 20rpx 40rpx; /* Reduced padding for a more compact look */
+  border-radius: 20rpx; /* Slightly reduced border radius */
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.12); /* Slightly reduced shadow */
+  backdrop-filter: blur(8rpx); /* Slightly reduced blur effect */
+  border: 1rpx solid rgba(78, 205, 196, 0.2); /* Lighter border with theme color */
   /* 移除浮动动画，保持文本静止 */
 }
 
 .clock-icon {
-  font-size: 36rpx;
-  margin-right: 15rpx;
-  filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.2));
+  font-size: 32rpx; /* Slightly reduced size */
+  margin-right: 12rpx; /* Reduced margin */
+  filter: drop-shadow(0 2rpx 3rpx rgba(0, 0, 0, 0.15)); /* Slightly reduced shadow */
+  color: #FF8E53; /* Orange color to match the confirm button gradient */
 }
 
 .button-group {
@@ -233,7 +235,7 @@
   text-align: center;
 }
 
-/* 汉语塔 - 软粉色 */
+/* 汉诺塔 - 软粉色 */
 .nav-item:nth-child(1) .nav-text {
   color: #FFB5B5;
 }

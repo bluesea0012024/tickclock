@@ -36,6 +36,9 @@ Page({
       hasCertificate: wx.getStorageSync('hasCertificate') || false
     });
     
+    // 加载中心猴子图片
+    this.loadMonkeyImage();
+    
     // 获取设备信息，动态计算时钟尺寸
     this.initClockSize();
     
@@ -53,6 +56,15 @@ Page({
     
     // 绘制时钟
     this.drawClock();
+  },
+  
+  // 加载中心猴子图片
+  loadMonkeyImage: function() {
+    const that = this;
+    // 直接设置图片路径
+    that.monkeyPath = '/pages/index/images/monkey1.jpg';
+    // 重新绘制时钟以显示猴子图片
+    that.drawClock();
   },
   
   // 初始化时钟尺寸
@@ -91,7 +103,7 @@ Page({
   onHide: function() {
     // 清理缓存数据
     this.lastDrawTime = null;
-    this.rabbitPath = null;
+    this.monkeyPath = null;
     // 清理canvas context缓存
     this.canvasContext = null;
   },
@@ -100,7 +112,7 @@ Page({
   onUnload: function() {
     // 清理所有缓存数据
     this.lastDrawTime = null;
-    this.rabbitPath = null;
+    this.monkeyPath = null;
     this.canvasContext = null;
     this.lastMinute = null;
   },
@@ -259,15 +271,15 @@ Page({
     ctx.stroke();
     
     // 绘制中心点（金色）
-    if (this.rabbitPath) {
-        // 如果有小兔子图片，绘制在中心
-        const rabbitSize = clockRadius * 0.2;
+    if (this.monkeyPath) {
+        // 如果有小猴子图片，绘制在中心
+        const monkeySize = clockRadius * 0.25; // 增大尺寸从0.15到0.25 (增加约67%)
         ctx.drawImage(
-            this.rabbitPath,
-            centerX - rabbitSize / 2,
-            centerY - rabbitSize / 2,
-            rabbitSize,
-            rabbitSize
+            this.monkeyPath,
+            centerX - monkeySize / 2,
+            centerY - monkeySize / 2,
+            monkeySize,
+            monkeySize
         );
     } else {
         // 如果图片未加载完成，绘制一个金色的中心点

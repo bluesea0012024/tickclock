@@ -5,7 +5,7 @@
 
   <!-- 使用指导 -->
   <view class="instruction">
-    <text class="instruction-text">拖动分针调整时间</text>
+    <text class="instruction-text">小手拨一拨，时间乖乖跟你走</text>
   </view>
 
   <view class="clock-container">
