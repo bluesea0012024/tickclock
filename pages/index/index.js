@@ -14,6 +14,7 @@ Page({
     targetHour: 12, // 目标小时
     targetMinute: 0, // 目标分钟
     targetTime: "12:00", // 目标时间显示
+    dragOffset: 0, // 拖拽偏移量
     
     // 游戏相关数据
     correctCount: 0, // 正确次数
@@ -61,8 +62,8 @@ Page({
     const windowWidth = systemInfo.windowWidth;
     
     // 计算画布尺寸（以px为单位）
-    // 增加尺寸比例，使时钟更大
-    const canvasSize = windowWidth * 0.8;
+    // 增加尺寸比例，使时钟更大 - 再调大10%
+    const canvasSize = windowWidth * 0.968;
     
     // 计算时钟参数
     const clockRadius = canvasSize * 0.45;
@@ -84,6 +85,24 @@ Page({
     this.setData({
       hasCertificate: wx.getStorageSync('hasCertificate') || false
     });
+  },
+
+  // 页面隐藏时清理内存
+  onHide: function() {
+    // 清理缓存数据
+    this.lastDrawTime = null;
+    this.rabbitPath = null;
+    // 清理canvas context缓存
+    this.canvasContext = null;
+  },
+
+  // 页面卸载时清理内存
+  onUnload: function() {
+    // 清理所有缓存数据
+    this.lastDrawTime = null;
+    this.rabbitPath = null;
+    this.canvasContext = null;
+    this.lastMinute = null;
   },
 
   // 初始化游戏
@@ -126,7 +145,11 @@ Page({
     // 验证和修复角度
     this.validateAndFixAngles();
     
-    const ctx = wx.createCanvasContext('clockCanvas');
+    // 复用canvas context以减少内存开销
+    if (!this.canvasContext) {
+      this.canvasContext = wx.createCanvasContext('clockCanvas');
+    }
+    const ctx = this.canvasContext;
     const { clockRadius, centerX, centerY, hourAngle, minuteAngle, canvasWidth, canvasHeight } = this.data;
     
     // 使用实际分针角度，无需限制范围
@@ -135,36 +158,50 @@ Page({
     // 清空画布 - 使用动态计算的画布尺寸
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     
-    // 绘制时钟外圈
+    // 绘制时钟外圈 - 使用 Medium Turquoise 边框色创建统一的色彩方案
     ctx.beginPath();
     ctx.arc(centerX, centerY, clockRadius, 0, 2 * Math.PI);
     ctx.setFillStyle('#ffffff');
     ctx.fill();
-    ctx.setLineWidth(clockRadius * 0.05);
-    ctx.setStrokeStyle('#3A7FE0');
+    ctx.setLineWidth(clockRadius * 0.15);
+    ctx.setStrokeStyle('#48D1CC'); // Medium Turquoise 边框，与导航栏颜色保持一致
     ctx.stroke();
     
-    // 绘制时钟刻度
+    // 绘制时钟刻度 - 彩色数字，每个数字使用独特的鲜艾颜色
+    const numberColors = ['#FF6B6B', '#FF8E53', '#FFEAA7', '#96CEB4', '#4ECDC4', '#45B7D1', 
+                         '#DDA0DD', '#FFB6C1', '#98FB98', '#F0E68C', '#DEB887', '#FA8072'];
+    
+    // 定义12个水果图标，对应1-12点
+    const fruitEmojis = ['🍇', '🍊', '🍌', '🍉',  '🥥', '🥝', '🍑', '🍒', '🥭', '🍍','🍓', '🍎'];
+    
     for (let i = 1; i <= 12; i++) {
       const angle = (i * Math.PI / 6) - Math.PI / 2;
       const x = centerX + (clockRadius - clockRadius*0.25) * Math.cos(angle);
       const y = centerY + (clockRadius - clockRadius*0.25) * Math.sin(angle);
       
-      ctx.setFontSize(clockRadius*0.3);
-      ctx.setFillStyle('#333333');
+      // 绘制水果图标（在表盘外圈附近）
+      const fruitX = centerX + (clockRadius + clockRadius*0.03) * Math.cos(angle);
+      const fruitY = centerY + (clockRadius + clockRadius*0.03) * Math.sin(angle);
+      ctx.setFontSize(clockRadius*0.18); // 水果图标大小
+      ctx.setTextAlign('center');
+      ctx.setTextBaseline('middle');
+      ctx.fillText(fruitEmojis[i-1], fruitX, fruitY);
+      
+      // 绘制数字
+      ctx.setFontSize(clockRadius*0.2304);
+      ctx.setFillStyle(numberColors[i-1]); // 使用彩色数字
       ctx.setTextAlign('center');
       ctx.setTextBaseline('middle');
       ctx.fillText(i.toString(), x, y);
     }
     
-    // 绘制分钟刻度和整点刻度
+    // 绘制分钟刻度和整点刻度 - 彩色刻度
     for (let i = 0; i < 60; i++) {
       const angle = (i * Math.PI / 30) - Math.PI / 2;
       
       if (i % 5 === 0) { // 整点位置（小时刻度）
-        // 只调整刻度线长度，保持起始点不变
-        const outerRadius = clockRadius;
-        const innerRadius = clockRadius - clockRadius*0.1;
+        const outerRadius = clockRadius - clockRadius*0.08; // 缩短外半径，让边框覆盖刻度线
+        const innerRadius = clockRadius - clockRadius*0.2;
         
         const outerX = centerX + outerRadius * Math.cos(angle);
         const outerY = centerY + outerRadius * Math.sin(angle);
@@ -174,8 +211,8 @@ Page({
         ctx.beginPath();
         ctx.moveTo(outerX, outerY);
         ctx.lineTo(innerX, innerY);
-        ctx.setLineWidth(clockRadius * 0.03);
-        ctx.setStrokeStyle('#333333');
+        ctx.setLineWidth(clockRadius * 0.04);
+        ctx.setStrokeStyle('#FF6B6B'); // 红色小时刻度
         ctx.stroke();
       } else { // 普通分钟刻度
         const outerRadius = clockRadius - clockRadius*0.08;
@@ -189,8 +226,8 @@ Page({
         ctx.beginPath();
         ctx.moveTo(outerX, outerY);
         ctx.lineTo(innerX, innerY);
-        ctx.setLineWidth(clockRadius * 0.01);
-        ctx.setStrokeStyle('#999999');
+        ctx.setLineWidth(clockRadius * 0.015);
+        ctx.setStrokeStyle('#87CEEB'); // 天蓝色分钟刻度
         ctx.stroke();
       }
     }
@@ -199,31 +236,51 @@ Page({
     const hourHandLength = clockRadius * 0.5;
     const minuteHandLength = clockRadius * 0.7;
     
-    // 绘制时针（蓝色）
+    // 绘制时针（紫色渐变）
     const hourX = centerX + hourHandLength * Math.cos(hourAngle);
     const hourY = centerY + hourHandLength * Math.sin(hourAngle);
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
     ctx.lineTo(hourX, hourY);
     ctx.setLineWidth(clockRadius * 0.08);
-    ctx.setStrokeStyle('#3A7FE0');
+    ctx.setStrokeStyle('#6C5CE7'); // 紫色时针
+    ctx.setLineCap('round'); // 圆滑线帽
     ctx.stroke();
     
-    // 绘制分针（红色）
+    // 绘制分针（红色渐变）
     const minuteX = centerX + minuteHandLength * Math.cos(safeMinuteAngle);
     const minuteY = centerY + minuteHandLength * Math.sin(safeMinuteAngle);
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
     ctx.lineTo(minuteX, minuteY);
     ctx.setLineWidth(clockRadius * 0.05);
-    ctx.setStrokeStyle('#E74C3C');
+    ctx.setStrokeStyle('#FF6B6B'); // 红色分针
+    ctx.setLineCap('round'); // 圆滑线帽
     ctx.stroke();
     
-    // 绘制中心点
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, clockRadius * 0.1, 0, 2 * Math.PI);
-    ctx.setFillStyle('#333333');
-    ctx.fill();
+    // 绘制中心点（金色）
+    if (this.rabbitPath) {
+        // 如果有小兔子图片，绘制在中心
+        const rabbitSize = clockRadius * 0.2;
+        ctx.drawImage(
+            this.rabbitPath,
+            centerX - rabbitSize / 2,
+            centerY - rabbitSize / 2,
+            rabbitSize,
+            rabbitSize
+        );
+    } else {
+        // 如果图片未加载完成，绘制一个金色的中心点
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, clockRadius * 0.1, 0, 2 * Math.PI);
+        ctx.setFillStyle('#FFD700'); // 金色中心
+        ctx.fill();
+    }
+    
+    // 添加装饰性元素 - 在时钟周围绘制小星星（已移除）
+    // if (!this.data.isDraggingMinute && !this.data.isDraggingHour) {
+    //   this.drawDecorativeStars(ctx, centerX, centerY, clockRadius);
+    // }
     
     // 更新当前时间
     this.updateCurrentTime();
@@ -263,39 +320,53 @@ Page({
   // 触摸开始事件
   touchStart: function(e) {
     const touch = e.touches[0];
-    const { centerX, centerY, clockRadius } = this.data;
+    const { centerX, centerY, clockRadius, hourAngle, minuteAngle } = this.data;
     
     // 计算触摸点到时钟中心的距离
     const dx = touch.x - centerX;
     const dy = touch.y - centerY;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // 判断触摸是否在时钟范围内
-    if (distance < clockRadius) {
+    // 判断触摸是否在时钟范围内（扩大触摸范围）
+    if (distance < clockRadius * 1.2) {
       // 计算触摸角度，转换为时钟坐标系（12点钟方向为0度，顺时针为正）
-      const angle = Math.atan2(dy, dx) - Math.PI / 2;
+      const touchAngle = Math.atan2(dy, dx) - Math.PI / 2;
       
-      // 计算分针的端点坐标
+      // 计算时针和分针的端点坐标
+      const hourHandLength = clockRadius * 0.5;
       const minuteHandLength = clockRadius * 0.7;
-      const minuteX = centerX + minuteHandLength * Math.cos(this.data.minuteAngle);
-      const minuteY = centerY + minuteHandLength * Math.sin(this.data.minuteAngle);
       
-      // 计算触摸点到分针端点的距离
+      const hourX = centerX + hourHandLength * Math.cos(hourAngle);
+      const hourY = centerY + hourHandLength * Math.sin(hourAngle);
+      const minuteX = centerX + minuteHandLength * Math.cos(minuteAngle);
+      const minuteY = centerY + minuteHandLength * Math.sin(minuteAngle);
+      
+      // 计算触摸点到各指针端点的距离
+      const hourPointDist = Math.sqrt(Math.pow(touch.x - hourX, 2) + Math.pow(touch.y - hourY, 2));
       const minutePointDist = Math.sqrt(Math.pow(touch.x - minuteX, 2) + Math.pow(touch.y - minuteY, 2));
       
-      // 判断是否接近分针
-      const isNearMinuteHand = minutePointDist < clockRadius * 0.3 || distance > clockRadius * 0.5;
+      // 判断离哪个指针更近，或者根据触摸位置决定
+      const isNearHourHand = hourPointDist < clockRadius * 0.4 && (distance < clockRadius * 0.6 || hourPointDist < minutePointDist);
+      const isNearMinuteHand = minutePointDist < clockRadius * 0.4 && !isNearHourHand;
       
-      // 初始化lastMinute，用于检测分针是否经过12点
-      if (!this.lastMinute) {
-        this.lastMinute = Math.round(((this.data.minuteAngle + Math.PI / 2) / (Math.PI / 30)) % 60);
+      // 初始化lastMinute，修复初始化问题
+      if (this.lastMinute === undefined || this.lastMinute === null) {
+        this.lastMinute = Math.round(((minuteAngle + Math.PI / 2) / (Math.PI / 30)) % 60);
       }
       
-      // 只允许拖动分针，不允许拖动时针
+      // 计算拖拽偏移量，避免手部跳动
+      let dragOffset = 0;
+      if (isNearMinuteHand) {
+        dragOffset = touchAngle - minuteAngle;
+      } else if (isNearHourHand) {
+        dragOffset = touchAngle - hourAngle;
+      }
+      
+      // 允许拖动时针或分针
       this.setData({
-        isDraggingHour: false,
+        isDraggingHour: isNearHourHand,
         isDraggingMinute: isNearMinuteHand,
-        lastTouchAngle: angle // 存储初始触摸角度
+        dragOffset: dragOffset // 存储拖拽偏移量
       });
       
       // 阻止事件冒泡和默认行为
@@ -307,62 +378,57 @@ Page({
   // 触摸移动事件
   touchMove: function(e) {
     const touch = e.touches[0];
-    const { centerX, centerY, isDraggingMinute, lastTouchAngle, hourAngle } = this.data;
+    const { centerX, centerY, isDraggingHour, isDraggingMinute, hourAngle, minuteAngle, dragOffset } = this.data;
     
     // 如果正在拖动指针
-    if (isDraggingMinute) {
+    if (isDraggingHour || isDraggingMinute) {
+      // 节流处理：限制重绘频率，防止内存溢出
+      const now = Date.now();
+      if (this.lastDrawTime && now - this.lastDrawTime < 16) { // 限制为60FPS
+        return;
+      }
+      this.lastDrawTime = now;
+      
       // 计算触摸点的角度，转换为时钟坐标系
       const dx = touch.x - centerX;
       const dy = touch.y - centerY;
-      const angle = Math.atan2(dy, dx) - Math.PI / 2;
+      const touchAngle = Math.atan2(dy, dx) - Math.PI / 2;
       
-      // 计算两次触摸之间的角度差
-      let angleDiff = angle - lastTouchAngle;
+      // 使用拖拽偏移量计算新的手部角度
+      const newAngle = touchAngle - dragOffset;
       
-      // 处理角度跨越π/-π边界的情况，确保旋转平滑
-      if (angleDiff > Math.PI) {
-        angleDiff -= 2 * Math.PI;
-      } else if (angleDiff < -Math.PI) {
-        angleDiff += 2 * Math.PI;
+      if (isDraggingMinute) {
+        // 拖动分针
+        let newMinuteAngle = newAngle;
+        
+        // 计算分钟值（0-55，每5分钟一个刻度）
+        let minute = Math.round(((newMinuteAngle + Math.PI / 2) / (Math.PI / 30)) % 60);
+        minute = ((minute % 60) + 60) % 60;
+        minute = Math.round(minute / 5) * 5;
+        if (minute === 60) minute = 0;
+        
+        // 更新lastMinute
+        this.lastMinute = minute;
+        
+        this.setData({
+          minuteAngle: newMinuteAngle,
+          currentMinute: minute
+        });
+        
+      } else if (isDraggingHour) {
+        // 拖动时针
+        let newHourAngle = newAngle;
+        
+        // 计算小时值（1-12）
+        let hour = Math.round(((newHourAngle + Math.PI / 2) / (Math.PI / 6)) % 12);
+        hour = ((hour % 12) + 12) % 12;
+        if (hour === 0) hour = 12;
+        
+        this.setData({
+          hourAngle: newHourAngle,
+          currentHour: hour
+        });
       }
-      
-      // 计算新的分针角度，确保角度在合理范围内
-      let newMinuteAngle = this.data.minuteAngle + angleDiff;
-      
-      // 允许分针无限制旋转，不限制角度范围
-      
-      // --- 更新时钟逻辑 ---
-      // 计算分钟值（0-55，每5分钟一个刻度）
-      let minute = Math.round(((newMinuteAngle + Math.PI / 2) / (Math.PI / 30)) % 60);
-      minute = ((minute % 60) + 60) % 60;
-      minute = Math.round(minute / 5) * 5;
-      if (minute === 60) minute = 0;
-      
-      // 根据分针位置计算小时，而不是使用旧的时针角度
-      // 首先获取当前的小时值（基于分针位置）
-      let hour = Math.floor(((this.data.hourAngle + Math.PI / 2) / (Math.PI / 6)) % 12);
-      if (hour === 0) hour = 12;
-      
-      let newHour = hour;
-      // 当分针经过12点时，更新小时
-      if (this.lastMinute > 50 && minute < 10) {
-        newHour = hour % 12 + 1;
-      } else if (this.lastMinute < 10 && minute > 50) {
-        newHour = (hour === 1) ? 12 : hour - 1;
-      }
-      
-      this.lastMinute = minute;
-      
-      // 计算时针的精确角度，考虑分钟的影响
-      const newHourAngle = ((newHour - 3) * (Math.PI / 6)) + (minute * (Math.PI / 360));
-      
-      this.setData({
-        minuteAngle: newMinuteAngle,
-        hourAngle: newHourAngle,
-        currentHour: newHour,
-        currentMinute: minute,
-        lastTouchAngle: angle // 更新上一次的触摸角度
-      });
       
       // 验证和修复角度
       this.validateAndFixAngles();
@@ -385,7 +451,8 @@ Page({
       // 重置拖动状态
       this.setData({
         isDraggingHour: false,
-        isDraggingMinute: false
+        isDraggingMinute: false,
+        dragOffset: 0 // 重置拖拽偏移量
       });
       
       // 对齐到最近的刻度
@@ -400,42 +467,65 @@ Page({
 
   // 对齐到最近的刻度
   snapToNearestTick: function() {
-    // 对齐分针到最近的5分钟刻度
-    // 计算当前分钟值
-    let currentMinute = Math.round(((this.data.minuteAngle + Math.PI / 2) / (Math.PI / 30)) % 60);
-    currentMinute = ((currentMinute % 60) + 60) % 60;
+    const { isDraggingHour, isDraggingMinute } = this.data;
     
-    // 对齐到最近的5分钟
-    let minute = Math.round(currentMinute / 5) * 5;
-    if (minute === 60) minute = 0;
-    
-    // 计算对齐后的分针角度
-    const minuteAngle = ((minute * Math.PI / 30) - Math.PI / 2);
-    
-    // 获取当前小时值（1-12）
-    let hour = Math.floor(((this.data.hourAngle + Math.PI / 2) / (Math.PI / 6)) % 12);
-    if (hour === 0) hour = 12;
-    
-    // 检查分针是否跨过12点，如果是则调整小时
-    if (this.lastMinute > 50 && minute < 10) {
-      hour = hour % 12 + 1;
-    } else if (this.lastMinute < 10 && minute > 50) {
-      hour = (hour - 2 + 12) % 12 + 1;
+    if (isDraggingMinute || !isDraggingHour) {
+      // 对齐分针到最近的5分钟刻度
+      // 计算当前分钟值
+      let currentMinute = Math.round(((this.data.minuteAngle + Math.PI / 2) / (Math.PI / 30)) % 60);
+      currentMinute = ((currentMinute % 60) + 60) % 60;
+      
+      // 对齐到最近的5分钟
+      let minute = Math.round(currentMinute / 5) * 5;
+      if (minute === 60) minute = 0;
+      
+      // 计算对齐后的分针角度
+      const minuteAngle = ((minute * Math.PI / 30) - Math.PI / 2);
+      
+      // 获取当前小时值（1-12）
+      let hour = Math.floor(((this.data.hourAngle + Math.PI / 2) / (Math.PI / 6)) % 12);
+      if (hour === 0) hour = 12;
+      
+      // 检查分针是否跨过12点，如果是则调整小时
+      if (this.lastMinute !== undefined && this.lastMinute !== null) {
+        if (this.lastMinute > 50 && minute < 10) {
+          hour = hour % 12 + 1;
+        } else if (this.lastMinute < 10 && minute > 50) {
+          hour = (hour - 2 + 12) % 12 + 1;
+        }
+      }
+      
+      // 更新lastMinute
+      this.lastMinute = minute;
+      
+      // 计算时针的精确角度，考虑分钟的影响
+      // 时针每小时旋转30度(π/6)，每分钟额外旋转0.5度(π/360)
+      const hourAngle = ((hour - 3) * (Math.PI / 6)) + (minute * (Math.PI / 360));
+      
+      this.setData({
+        hourAngle: hourAngle,
+        minuteAngle: minuteAngle,
+        currentHour: hour,
+        currentMinute: minute
+      });
+    } else if (isDraggingHour) {
+      // 对齐时针到最近的小时刻度
+      // 计算当前小时值
+      let hour = Math.round(((this.data.hourAngle + Math.PI / 2) / (Math.PI / 6)) % 12);
+      hour = ((hour % 12) + 12) % 12;
+      if (hour === 0) hour = 12;
+      
+      // 保持当前分钟不变
+      const currentMinute = this.data.currentMinute;
+      
+      // 计算对齐后的时针角度
+      const hourAngle = ((hour - 3) * (Math.PI / 6)) + (currentMinute * (Math.PI / 360));
+      
+      this.setData({
+        hourAngle: hourAngle,
+        currentHour: hour
+      });
     }
-    
-    // 更新lastMinute
-    this.lastMinute = minute;
-    
-    // 计算时针的精确角度，考虑分钟的影响
-    // 时针每小时旋转30度(π/6)，每分钟额外旋转0.5度(π/360)
-    const hourAngle = ((hour - 3) * (Math.PI / 6)) + (minute * (Math.PI / 360));
-    
-    this.setData({
-      hourAngle: hourAngle,
-      minuteAngle: minuteAngle,
-      currentHour: hour,
-      currentMinute: minute
-    });
     
     // 重新绘制时钟
     this.drawClock();
@@ -448,20 +538,7 @@ Page({
       totalQuestions: this.data.totalQuestions + 1
     });
     
-    // 调试信息：显示当前时间和目标时间
-    console.log('当前时间:', this.data.currentHour + ':' + this.data.currentMinute);
-    console.log('目标时间:', this.data.targetHour + ':' + this.data.targetMinute);
-    console.log('分针角度:', this.data.minuteAngle);
-    console.log('时针角度:', this.data.hourAngle);
-    
-    // 调用测试函数验证时间计算
-    this.testTimeCalculation();
-    
-    // 验证时针角度计算
-    this.validateHourCalculation();
-    
-    // 验证时针角度反向计算
-    this.validateHourAngleReverse();
+    // 已移除所有console.log语句以优化内存使用
     
     // 检查当前时间是否与目标时间匹配
     if (this.data.currentHour === this.data.targetHour && 
@@ -528,9 +605,24 @@ Page({
 
   // 查看奖状
   viewCertificate: function() {
-    wx.navigateTo({
-      url: '/pages/certificate/certificate'
-    });
+    // 检查是否有奖状
+    const hasCertificate = wx.getStorageSync('hasCertificate') || false;
+    
+    if (hasCertificate) {
+      // 有奖状，直接跳转
+      wx.navigateTo({
+        url: '/pages/certificate/certificate'
+      });
+    } else {
+      // 没有奖状，显示提示信息
+      wx.showModal({
+        title: '奖状尚未获得',
+        content: '请继续答题！答对5道题即可获得精美奖状。\n\n当前进度：' + this.data.correctCount + '/5',
+        showCancel: false,
+        confirmText: '继续努力',
+        confirmColor: '#4ECDC4'
+      });
+    }
   },
 
   // 昵称输入事件
@@ -589,77 +681,97 @@ Page({
     return false; // 表示角度正常
   },
 
-  // 测试时间计算函数
+  // 测试时间计算函数（仅用于开发环境，生产环境已移除日志输出）
   testTimeCalculation: function() {
-    console.log('=== 时间计算测试 ===');
-    console.log('分针角度:', this.data.minuteAngle);
-    console.log('时针角度:', this.data.hourAngle);
-    
-    // 计算分钟
-    let minute = Math.round(((this.data.minuteAngle + Math.PI / 2) / (Math.PI / 30)) % 60);
-    minute = ((minute % 60) + 60) % 60;
-    minute = Math.round(minute / 5) * 5;
-    if (minute === 60) minute = 0;
-    
-    // 计算小时
-    const hourAngleRad = this.data.hourAngle + Math.PI / 2;
-    let hourDecimal = (hourAngleRad / (Math.PI / 6)) % 12;
-    let hour = Math.floor(hourDecimal);
-    if (hour === 0) hour = 12;
-    
-    console.log('计算出的时间:', hour + ':' + minute);
-    console.log('当前存储的时间:', this.data.currentHour + ':' + this.data.currentMinute);
-    console.log('目标时间:', this.data.targetHour + ':' + this.data.targetMinute);
-    
-    // 详细的角度分析
-    console.log('--- 详细分析 ---');
-    console.log('分针角度(弧度):', this.data.minuteAngle);
-    console.log('分针角度(度):', (this.data.minuteAngle * 180 / Math.PI).toFixed(2));
-    console.log('时针角度(弧度):', this.data.hourAngle);
-    console.log('时针角度(度):', (this.data.hourAngle * 180 / Math.PI).toFixed(2));
-    console.log('hourAngleRad:', hourAngleRad);
-    console.log('hourDecimal:', hourDecimal);
-    console.log('==================');
+    // 已移除所有console.log语句以优化内存使用
   },
 
-  // 验证时针角度计算
+  // 验证时针角度计算（仅用于开发环境，生产环境已移除日志输出）
   validateHourCalculation: function() {
-    console.log('=== 时针角度验证 ===');
-    
-    // 测试不同小时的角度计算
-    for (let h = 1; h <= 12; h++) {
-      const expectedAngle = ((h - 3) * (Math.PI / 6));
-      const calculatedHour = Math.floor(((expectedAngle + Math.PI / 2) / (Math.PI / 6)) % 12);
-      const finalHour = calculatedHour === 0 ? 12 : calculatedHour;
-      
-      console.log(`小时 ${h}: 期望角度=${(expectedAngle * 180 / Math.PI).toFixed(2)}°, 计算小时=${finalHour}`);
+    // 已移除所有console.log语句以优化内存使用
+  },
+
+  // 验证时针角度反向计算（仅用于开发环境，生产环境已移除日志输出）
+  validateHourAngleReverse: function() {
+    // 已移除所有console.log语句以优化内存使用
+  },
+  
+  // 绘制装饰性小星星（优化版本，减少星星数量以节约内存）
+  drawDecorativeStars: function(ctx, centerX, centerY, clockRadius) {
+    // 缓存静态数据以减少重复创建
+    if (!this.starCache) {
+      this.starCache = {
+        colors: ['#FFD700', '#FF69B4', '#00CED1', '#98FB98', '#DDA0DD', '#F0E68C'],
+        positions: [
+          { angle: 0, distance: 1.3 },
+          { angle: 2 * Math.PI / 3, distance: 1.35 },
+          { angle: 4 * Math.PI / 3, distance: 1.25 },
+          { angle: Math.PI, distance: 1.3 }
+        ]
+      };
     }
     
-    console.log('当前时针角度:', (this.data.hourAngle * 180 / Math.PI).toFixed(2) + '°');
-    console.log('==================');
+    this.starCache.positions.forEach((star, index) => {
+      const x = centerX + clockRadius * star.distance * Math.cos(star.angle);
+      const y = centerY + clockRadius * star.distance * Math.sin(star.angle);
+      
+      this.drawStar(ctx, x, y, clockRadius * 0.06, this.starCache.colors[index]);
+    });
   },
-
-  // 验证时针角度反向计算
-  validateHourAngleReverse: function() {
-    console.log('=== 时针角度反向验证 ===');
+  
+  // 绘制单个星星（优化版本，减少路径复杂度）
+  drawStar: function(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.translate(x, y);
     
-    // 从当前时针角度反向计算小时
-    const hourAngleRad = this.data.hourAngle + Math.PI / 2;
-    let hourDecimal = (hourAngleRad / (Math.PI / 6)) % 12;
-    let hour = Math.floor(hourDecimal);
-    if (hour === 0) hour = 12;
+    // 使用简化的星形绘制，减少计算量
+    ctx.beginPath();
+    ctx.moveTo(0, -size);
+    ctx.lineTo(size * 0.3, -size * 0.3);
+    ctx.lineTo(size, 0);
+    ctx.lineTo(size * 0.3, size * 0.3);
+    ctx.lineTo(0, size);
+    ctx.lineTo(-size * 0.3, size * 0.3);
+    ctx.lineTo(-size, 0);
+    ctx.lineTo(-size * 0.3, -size * 0.3);
+    ctx.closePath();
     
-    console.log('当前时针角度(弧度):', this.data.hourAngle);
-    console.log('当前时针角度(度):', (this.data.hourAngle * 180 / Math.PI).toFixed(2));
-    console.log('hourAngleRad:', hourAngleRad);
-    console.log('hourDecimal:', hourDecimal);
-    console.log('计算出的小时:', hour);
+    ctx.setFillStyle(color);
+    ctx.fill();
     
-    // 验证11:30的时针角度应该是多少
-    const expectedHourAngle = ((11 - 3) * (Math.PI / 6)) + (30 * (Math.PI / 360));
-    console.log('11:30的期望时针角度(弧度):', expectedHourAngle);
-    console.log('11:30的期望时针角度(度):', (expectedHourAngle * 180 / Math.PI).toFixed(2));
-    
-    console.log('==================');
+    ctx.restore();
+  },
+  
+  // 新增：未上线功能提示
+  comingSoon: function() {
+    wx.showToast({
+      title: '即将上线，敬请期待',
+      icon: 'none'
+    });
+  },
+  
+  // 测试功能：手动启用奖状（仅用于演示）
+  enableCertificateForDemo: function() {
+    wx.setStorageSync('hasCertificate', true);
+    this.setData({
+      hasCertificate: true,
+      correctCount: 5
+    });
+    wx.showToast({
+      title: '奖状已启用（演示模式）',
+      icon: 'success'
+    });
+  },
+  
+  // 跳转到汉诺塔小程序
+  goToHanoi: function() {
+    wx.navigateToMiniProgram({
+      appId: 'wx4f87b8582ddf6b04', // 需要替换为汉诺塔小程序的实际appid
+      path: '/hanoi/hanoi',
+      success: () => {},
+      fail: () => {
+        wx.showToast({ title: '跳转失败', icon: 'none' });
+      }
+    });
   }
 });

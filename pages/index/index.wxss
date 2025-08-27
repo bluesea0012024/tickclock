@@ -2,9 +2,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20rpx;
-  height: 100vh;
-  background-color: #f5f5f5;
+  padding: 20rpx 20rpx 140rpx 20rpx; /* 增加底部内边距以适应底部导航 */
+  min-height: 100vh;
+  /* 恢复原始的彩色彩虹渐变主题背景 */
+  background: linear-gradient(135deg, 
+    #FFE5B4 0%,   /* Peach puff */
+    #FFB6C1 25%,  /* Light pink */
+    #B6E5D8 50%,  /* Aquamarine */
+    #DDA0DD 75%,  /* Plum */
+    #F0E68C 100%  /* Khaki */
+  );
+  background-attachment: fixed;
 }
 
 .header {
@@ -13,11 +21,13 @@
   justify-content: flex-end;
   align-items: center;
   margin-bottom: 30rpx;
+  padding-right: 20rpx;
 }
 
 .progress {
   font-size: 32rpx;
-  color: #333;
+  color: #666;
+  font-weight: 500;
 }
 
 /* 使用指导 */
@@ -28,12 +38,17 @@
 }
 
 .instruction-text {
-  font-size: 28rpx;
-  color: #666;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 10rpx 20rpx;
-  border-radius: 20rpx;
-  border: 1rpx solid #ddd;
+  font-size: 30rpx;
+  color: #2C3E50;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+  padding: 15rpx 30rpx;
+  border-radius: 25rpx;
+  border: 2rpx solid rgba(116, 185, 255, 0.3);
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10rpx);
+  font-weight: 500;
+  /* 将指导文本上移 20px */
+  transform: translateY(-20px);
 }
 
 /* 时钟容器 */
@@ -43,6 +58,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  /* 添加时钟外围阴影效果，匹配昨天的设计 */
+  filter: drop-shadow(0 8rpx 25rpx rgba(0, 0, 0, 0.15));
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
 }
 
 
@@ -54,14 +73,26 @@
 }
 
 .target-time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 40rpx 0;
   font-size: 40rpx;
   font-weight: bold;
-  color: #333;
-  background-color: #fff;
+  color: #2C3E50;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
   padding: 25rpx 50rpx;
-  border-radius: 15rpx;
-  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.15);
+  border-radius: 25rpx;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10rpx);
+  border: 2rpx solid rgba(116, 185, 255, 0.3);
+  /* 移除浮动动画，保持文本静止 */
+}
+
+.clock-icon {
+  font-size: 36rpx;
+  margin-right: 15rpx;
+  filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.2));
 }
 
 .button-group {
@@ -69,16 +100,54 @@
   display: flex;
   justify-content: space-around;
   margin-top: 50rpx;
+  /* 将按钮组作为整体上移 55px (原25px + 30px) */
+  transform: translateY(-25px);
 }
 
 .btn {
-  background-color: #3A7FE0;
+  font-size: 32rpx;
+  padding: 20rpx 40rpx; /* 减少按钮宽度 */
+  border-radius: 25rpx;
+  margin: 0 25rpx; /* 增加按钮间距到 25rpx */
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.15);
+  border: none;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  /* 添加微妙的变换效果 */
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
+}
+
+/* 确认按钮 - 珊瑚/橙色渐变，匹配参考图片 */
+.btn:nth-child(1) {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
   color: white;
-  font-size: 36rpx;
-  padding: 20rpx 40rpx;
-  border-radius: 15rpx;
-  margin: 0 15rpx;
+  box-shadow: 0 8rpx 20rpx rgba(255, 107, 107, 0.35);
+}
+
+/* 重新开始按钮 - 特定的青绿到蓝色渐变，符合UI规范 */
+.btn:nth-child(2) {
+  background: linear-gradient(135deg, #4ECDC4, #45B7D1);
+  color: white;
+  box-shadow: 0 8rpx 20rpx rgba(78, 205, 196, 0.4); /* 青绿色阴影效果 */
+}
+
+/* 查看奖状按钮 - 紫色渐变，增强视觉效果 */
+.btn:nth-child(3) {
+  background: linear-gradient(135deg, #A29BFE, #6C5CE7);
+  color: white;
+  box-shadow: 0 8rpx 20rpx rgba(108, 92, 231, 0.35);
+}
+
+.btn:active {
+  transform: translateY(2rpx);
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.2);
+}
+
+/* 按钮悬停效果 */
+.btn:hover {
+  transform: translateY(-1rpx);
+  box-shadow: 0 10rpx 25rpx rgba(0, 0, 0, 0.2);
 }
 
 /* 昵称输入弹窗 */
@@ -122,4 +191,71 @@
 
 .confirm-btn {
   width: 60%;
+}
+
+/* 底部导航栏 */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 120rpx;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 249, 250, 0.9));
+  backdrop-filter: blur(20rpx);
+  border-top: 1rpx solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 40rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.08);
+  z-index: 100;
+  /* 左移20px */
+  transform: translateX(-20px);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20rpx 0;
+  transition: all 0.3s ease;
+}
+
+.nav-item:active {
+  transform: scale(0.95);
+  opacity: 0.7;
+}
+
+.nav-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* 汉语塔 - 软粉色 */
+.nav-item:nth-child(1) .nav-text {
+  color: #FFB5B5;
+}
+
+/* 乘法口诀 - 软天蓝色 */
+.nav-item:nth-child(3) .nav-text {
+  color: #B5D8FF;
+}
+
+/* 口算练习 - 软薪荷绿色 */
+.nav-item:nth-child(5) .nav-text {
+  color: #B5E8D8;
+}
+
+/* 生字预习 - 软薰衣草紫色 */
+.nav-item:nth-child(7) .nav-text {
+  color: #D8B5FF;
+}
+
+.nav-separator {
+  color: rgba(0, 0, 0, 0.15);
+  font-size: 22rpx;
+  margin: 0 10rpx;
+  font-weight: 300;
 }
